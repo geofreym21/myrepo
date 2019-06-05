@@ -1,0 +1,112 @@
+Sub forEachWs()
+
+Dim ws As Worksheet
+            
+    For Each ws In Worksheets
+        ws.Select
+        Call SumPerTicker
+    Next
+    
+    MsgBox ("all worksheets have been updated")
+
+End Sub
+
+
+
+
+Sub SumPerTicker()
+
+Dim countticker As Integer
+Dim totalvol As Double
+Dim Opening As Long
+Dim Openrow As Long
+
+LastRow = ActiveWorkbook.ActiveSheet.Cells(Rows.Count, 1).End(xlUp).Row
+
+countticker = 0
+totalvol = 0
+Opening = 0
+Openrow = 0
+
+MaxIncrease = 0
+MaxDecrease = 0
+MaxVolume = 0
+
+Range("I1") = "Ticker"
+Range("J1") = "Yearly Change"
+Range("K1") = "Percentage Change"
+Range("L1") = "Total Stock Volume"
+
+
+For i = 2 To LastRow
+    totalvol = totalvol + Cells(i, 7).Value
+  
+    Opening = Opening + 1                                                        'number for rows for opening price
+    If Opening = 1 Then
+        Openrow = i
+    End If
+        
+    If Cells(i, 1).Value <> Cells(i + 1, 1) Then
+        countticker = countticker + 1                                            'row position for columns I to L
+     
+      Cells(countticker + 1, 9).Value = Cells(i, 1).Value                        'ticker symbol
+      Cells(countticker + 1, 12).Value = totalvol                                'total stock volume
+      'Cells(countticker + 1, 13).Value = Cells(Openrow, 3)  opening price
+      'Cells(countticker + 1, 14).Value = Cells(i, 6)        closing price
+      
+      If Cells(Openrow, 3).Value = 0 Or Cells(i, 6).Value = 0 Then               'if opening or closing is zero
+        Cells(countticker + 1, 11).Value = 0
+        Cells(countticker + 1, 10).Value = 0
+      Else:
+      PercentChange = (Cells(i, 6) - Cells(Openrow, 3)) / Cells(Openrow, 3)      'compute for change in percentage
+      Cells(countticker + 1, 11).Value = PercentChange                           'percentage change
+      Cells(countticker + 1, 10).Value = Cells(i, 6) - Cells(Openrow, 3)         'yearly change
+      End If
+      
+      If Cells(countticker + 1, 10).Value > 0 Then
+        Cells(countticker + 1, 10).Interior.ColorIndex = 4
+        Else: Cells(countticker + 1, 10).Interior.ColorIndex = 3
+      
+      End If
+      totalvol = 0
+      Opening = 0
+              
+    End If
+
+Next i
+ActiveSheet.Columns("I:L").AutoFit
+ActiveSheet.Columns("K").NumberFormat = "0.00%"
+
+Range("O2") = "Greatest % Increase"
+Range("O3") = "Greatest % Decrease"
+Range("O4") = "Greatest Total Volume"
+Range("P1") = "Ticker"
+Range("Q1") = "Value"
+
+For i = 2 To countticker
+    If Cells(i, 11).Value > MaxIncrease Then
+        MaxIncrease = Cells(i, 11).Value
+        Cells(2, 17).Value = MaxIncrease        'Maximum Increase
+        Cells(2, 16).Value = Cells(i, 9).Value  'Ticker symbol
+        Cells(2, 17).NumberFormat = "0.00%"
+    End If
+
+    If Cells(i, 10).Value < MaxDecrease Then
+        MaxDecrease = Cells(i, 10).Value
+        Cells(3, 17).Value = MaxDecrease        'Maximum Decrease
+        Cells(3, 16).Value = Cells(i, 9).Value  'Ticker symbol
+        Cells(3, 17).NumberFormat = "0.000000"
+    End If
+
+    If Cells(i, 12).Value > MaxVolume Then
+        MaxVolume = Cells(i, 12).Value
+        Cells(4, 17).Value = MaxVolume          'Maximum Volume
+        Cells(4, 16).Value = Cells(i, 9).Value  'Ticker symbol
+    End If
+
+Next i
+ActiveSheet.Columns("O:Q").AutoFit
+ 
+End Sub
+
+
